@@ -79,3 +79,6 @@ This boilerplate can be your “launchpad” for production apps that need both 
    ```bash
    git clone https://github.com/Aizen-souske009/next_major.git
    cd next_major
+   ```
+
+2. Install JS dependencies    
