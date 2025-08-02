@@ -81,4 +81,34 @@ This boilerplate can be your “launchpad” for production apps that need both 
    cd next_major
    ```
 
-2. Install JS dependencies    
+2. Install JS dependencies
+   ```bash
+   npm i
+   ```
+# Database
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME
+
+# NextAuth.js
+NEXTAUTH_SECRET=some-very-strong-secret
+NEXTAUTH_URL=http://localhost:3000
+
+# OAuth Providers
+GITHUB_ID=your_github_client_id
+GITHUB_SECRET=your_github_client_secret
+GOOGLE_ID=your_google_client_id
+GOOGLE_SECRET=your_google_client_secret
+
+Database Setup
+1. Generate Prisma client & run migrations:
+   ```bash
+   npx prisma migrate dev --name init
+   npx prisma generate
+   ```
+2. (Optional) Open Prisma Studio:
+   ```bash
+   npx prisma studio
+   ```
+Run the App
+   ```bash
+   npm run dev
+   ```
