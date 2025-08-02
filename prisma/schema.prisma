@@ -1,0 +1,154 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")  // optional, for safe migration diffs
+}
+
+///////////////////////////////////////////////////////
+// Enums
+///////////////////////////////////////////////////////
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum DetectionLabel {
+  REAL
+  AI
+  MORPHED
+  UNKNOWN
+}
+
+///////////////////////////////////////////////////////
+// Core NextAuth Models
+// (Required by @next-auth/prisma-adapter)
+///////////////////////////////////////////////////////
+
+model User {
+  id            String                 @id @default(cuid())
+  name          String?
+  email         String?                @unique
+  image         String?
+  role          UserRole               @default(USER)
+  emailVerified DateTime?
+  lastLogin     DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  imageScans    ImageScan[] // Your detection results
+  twoFactorConf TwoFactorConfirmation?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+///////////////////////////////////////////////////////
+// App Models: Deepfake Detection
+///////////////////////////////////////////////////////
+
+model ImageScan {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Where the image lives (upload, S3, local path, or DB)
+  sourceUrl String? // e.g. /uploads/foo.jpg or remote storage URL
+  filename  String?
+  originalName String? // Original filename from user
+  mimeType  String?
+  sizeBytes Int?
+
+  // Detection results
+  label      DetectionLabel @default(UNKNOWN) // REAL | AI | MORPHED | UNKNOWN
+  confidence Float? // 0.0–1.0
+  prediction String? // "AI" or "Real"
+  isAI       Boolean @default(false)
+
+  // Optional artifact visualization paths
+  heatmapUrl String?
+  maskUrl    String? // e.g., inpaint/splice mask
+
+  // Arbitrary per‑scan metadata (model version, latency, etc.)
+  metadata Json?
+
+  scannedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([label])
+  @@index([scannedAt])
+  @@index([isAI])
+}
+
+///////////////////////////////////////////////////////
+// Optional Extended Auth Helpers
+// (You saw these show up in drift earlier; keeping them
+// here prevents future drift if/when you implement them.)
+///////////////////////////////////////////////////////
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}

@@ -26,6 +26,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
 
 # vercel
@@ -34,3 +35,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/uploads/
+/New_datasets/
+balance_dataset.py
+download_test_images.py
+validate_deepfake_model.py
+training_output/
+validation_output/
+Datasets_Balanced/
+train_enhanced_deepfake_model.py
+/app/generated/prisma/
+download_test_images.py
+validate_enhanced_model.py
+run_enhanced_training.py
+test_images/
+
+
+
+
